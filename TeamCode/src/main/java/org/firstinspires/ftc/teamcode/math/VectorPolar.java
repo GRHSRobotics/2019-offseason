@@ -1,15 +1,15 @@
 package org.firstinspires.ftc.teamcode.math;
 
-public class VectorPolar extends Vector {
+public class VectorPolar {
 
     private double magnitude;
     private double angle; //should always be in radians
 
     //constructor, makes sure class is created with the right data
-    public VectorPolar (double magnitude, double angle, angleUnit unit){
+    public VectorPolar (double magnitude, double angle, AngleUnit unit){
         this.magnitude = magnitude;
 
-        if(unit == angleUnit.RADIANS) {
+        if(unit == AngleUnit.RADIANS) {
             this.angle = angle;
         } else {
             this.angle = Math.toRadians(angle);
@@ -24,16 +24,16 @@ public class VectorPolar extends Vector {
         magnitude = newMagnitude;
     }
 
-    public double getAngle(angleUnit unit){
-        if (unit == angleUnit.RADIANS) {
+    public double getAngle(AngleUnit unit){
+        if (unit == AngleUnit.RADIANS) {
             return angle;
         } else {
             return Math.toDegrees(angle);
         }
     }
 
-    public void setAngle(double newAngle, angleUnit unit){
-        if(unit == angleUnit.RADIANS){
+    public void setAngle(double newAngle, AngleUnit unit){
+        if(unit == AngleUnit.RADIANS){
             angle = newAngle;
         } else{
             angle = Math.toRadians(newAngle);
@@ -42,10 +42,11 @@ public class VectorPolar extends Vector {
     }
 
     public double getX(){
-        return magnitude * Math.cos(angle);
+        return magnitude * Math.cos(angle); //TODO: add sanity check go make sure that values that should be zero are actually zero
     }
 
     public double getY(){
         return magnitude * Math.sin(angle);
     }
+
 }
