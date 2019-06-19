@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystem;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.math.AngleUnit;
 
@@ -49,14 +48,14 @@ public class MecanumDrivetrain {
      *
      * @param speed The desired speed of robot movement in the range [-1, 1]
      * @param direction The desired direction of robot travel in the range [0, 2pi]
-     * @param angleSpeed The desired rate of change of robot direction [-1, 1]
+     * @param rotationSpeed The desired rate of change of robot direction [-1, 1]
      * @param angleUnit The unit of the inputted angle, either in degrees or radians
      */
-    public void setPower(double speed, double direction, double angleSpeed, AngleUnit angleUnit){
+    public void setPower(double speed, double direction, double rotationSpeed, AngleUnit angleUnit){
 
         double angle;
         double clampedSpeed;
-        double clampedAngleSpeed;
+        double clampedRotationSpeed;
 
         //convert to radians if necessary
         if(angleUnit == AngleUnit.DEGREES){
@@ -75,19 +74,19 @@ public class MecanumDrivetrain {
         }
 
         //clamp direction change speed if necessary
-        if(angleSpeed > 1){
-            clampedAngleSpeed = 1;
-        } else if(angleSpeed < -1){
-            clampedAngleSpeed = -1;
+        if(rotationSpeed > 1){
+            clampedRotationSpeed = 1;
+        } else if(rotationSpeed < -1){
+            clampedRotationSpeed = -1;
         } else{
-            clampedAngleSpeed = angleSpeed;
+            clampedRotationSpeed = rotationSpeed;
         }
 
         //calculate raw motor powers, see team resources for math explanation
-        double rawPowerFL = clampedSpeed * Math.sin(-1*angle + Math.PI/4) - clampedAngleSpeed;
-        double rawPowerFR = clampedSpeed * Math.cos(-1*angle + Math.PI/4) + clampedAngleSpeed;
-        double rawPowerBL = clampedSpeed * Math.cos(-1*angle + Math.PI/4) - clampedAngleSpeed;
-        double rawPowerBR = clampedSpeed * Math.sin(-1*angle + Math.PI/4) + clampedAngleSpeed;
+        double rawPowerFL = clampedSpeed * Math.sin(-1*angle + Math.PI/4) - clampedRotationSpeed;
+        double rawPowerFR = clampedSpeed * Math.cos(-1*angle + Math.PI/4) + clampedRotationSpeed;
+        double rawPowerBL = clampedSpeed * Math.cos(-1*angle + Math.PI/4) - clampedRotationSpeed;
+        double rawPowerBR = clampedSpeed * Math.sin(-1*angle + Math.PI/4) + clampedRotationSpeed;
 
         //reduce all motor powers to a max of 1 while maintaining the ratio between them
         double highestPower = Math.max(Math.max(rawPowerFL, rawPowerFR), Math.max(rawPowerBL, rawPowerBR)); //contains the highest of the 4 raw powers
