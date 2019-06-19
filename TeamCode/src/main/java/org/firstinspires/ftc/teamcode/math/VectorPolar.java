@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.math;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 public class VectorPolar {
 
     private double magnitude;

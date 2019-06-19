@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.OpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Robot;
 
+
+@TeleOp(name="BasicTeleopTest", group="Basic")
 public class BasicTeleopTest extends LinearOpMode {
 
     Robot robot;

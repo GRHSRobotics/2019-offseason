@@ -1,28 +1,29 @@
 package org.firstinspires.ftc.teamcode.subsystem;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.math.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class XDrivetrain {
 
-    public DcMotor front;
-    public DcMotor back;
-    public DcMotor left;
-    public DcMotor right;
+    public DcMotorEx front;
+    public DcMotorEx back;
+    public DcMotorEx left;
+    public DcMotorEx right;
 
     public XDrivetrain(HardwareMap hardwareMap){
-        this.front = hardwareMap.get(DcMotor.class, "front");
-        this.back = hardwareMap.get(DcMotor.class, "back");
-        this.left = hardwareMap.get(DcMotor.class, "left");
-        this.right = hardwareMap.get(DcMotor.class, "right");
+        this.front = hardwareMap.get(DcMotorEx.class, "front");
+        this.back = hardwareMap.get(DcMotorEx.class, "back");
+        this.left = hardwareMap.get(DcMotorEx.class, "left");
+        this.right = hardwareMap.get(DcMotorEx.class, "right");
 
         //change motor directions so that positive powers move the right way
-        this.front.setDirection(DcMotor.Direction.FORWARD);
-        this.back.setDirection(DcMotor.Direction.REVERSE);
-        this.left.setDirection(DcMotor.Direction.FORWARD);
-        this.right.setDirection(DcMotor.Direction.REVERSE);
+        this.front.setDirection(DcMotor.Direction.REVERSE);
+        this.back.setDirection(DcMotor.Direction.FORWARD);
+        this.left.setDirection(DcMotor.Direction.REVERSE);
+        this.right.setDirection(DcMotor.Direction.FORWARD);
 
         //assign runmode and zero power behavior
         setRunMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -76,6 +77,13 @@ public class XDrivetrain {
 
 
     }
+    /*
+    public void setPowerEx(double forwardPower, double strafePower){
+
+        front.setVelocity(strafePower, );
+
+    }
+    */
 
     /**
      *
