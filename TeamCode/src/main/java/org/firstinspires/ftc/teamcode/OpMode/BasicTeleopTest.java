@@ -13,7 +13,8 @@ public class BasicTeleopTest extends LinearOpMode {
 
     public void runOpMode(){
 
-        robot = new Robot(hardwareMap);
+        robot = new Robot(hardwareMap, telemetry);
+        robot.drivetrain.initIMU(hardwareMap);
 
         waitForStart(); //separates init period from start period
 

@@ -1,21 +1,23 @@
 package org.firstinspires.ftc.teamcode.subsystem;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class MecanumDrivetrain {
 
-    public DcMotor frontLeft;
-    public DcMotor frontRight;
-    public DcMotor backLeft;
-    public DcMotor backRight;
+    public DcMotorEx frontLeft;
+    public DcMotorEx frontRight;
+    public DcMotorEx backLeft;
+    public DcMotorEx backRight;
 
-    public MecanumDrivetrain(DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight){
-        this.frontLeft = frontLeft;
-        this.frontRight = frontRight;
-        this.backLeft = backLeft;
-        this.backRight = backRight;
+    public MecanumDrivetrain(HardwareMap hardwareMap){
+        this.frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        this.frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        this.backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        this.backRight = hardwareMap.get(DcMotorEx.class, "backRight");
 
         //reverse right motors so that the forward direction is the same way for all motors
         this.frontLeft.setDirection(DcMotor.Direction.FORWARD);
