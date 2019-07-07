@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.subsystem;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -17,24 +16,24 @@ import org.firstinspires.ftc.teamcode.math.PDController;
 //extending an OpMode class in a hardware class is no bueno
 public class XDrivetrain extends LinearOpMode {
 
-    public DcMotorEx front;
-    public DcMotorEx back;
-    public DcMotorEx left;
-    public DcMotorEx right;
+    public DcMotor front;
+    public DcMotor back;
+    public DcMotor left;
+    public DcMotor right;
 
     public BNO055IMU imu; //REV Hub
 
     //DRIVETRAIN CONSTANTS
-    public static final double MAX_VELOCITY = 1; //inches per second
-    public static final double MAX_ACCELERATION = 0.15; //inches per second^2
-    public static final double WHEEL_RADIUS = 2; //inches
-    public static final double WHEEL_CIRCUMFERENCE = 4 * Math.PI; //inches
+    public static final double MAX_VELOCITY = 1; //power
+    public static final double MAX_ACCELERATION = 0.15; //power per second
+    public static final double WHEEL_RADIUS = 1.5; //inches
+    public static final double WHEEL_CIRCUMFERENCE = 3 * Math.PI; //inches
     public static final double ROBOT_DIAMETER = 18; //inches
-    public static final double COUNTS_PER_ROTATION = 280;
+    public static final double COUNTS_PER_ROTATION = 1120;
     public static final double COUNTS_PER_INCH = COUNTS_PER_ROTATION / WHEEL_CIRCUMFERENCE;
 
-    public static final double kP_DRIVE = 0.01;
-    public static final double kD_DRIVE = 0.1; //until constants are properly determined
+    public static final double kP_DRIVE = 0.05;
+    public static final double kD_DRIVE = 0; //until constants are properly determined
     public static final double kP_TURN = 0.01;
     public static final double kD_TURN = 0.1;
 
@@ -42,10 +41,10 @@ public class XDrivetrain extends LinearOpMode {
 
 
     public XDrivetrain(HardwareMap hardwareMap){
-        this.front = hardwareMap.get(DcMotorEx.class, "front");
-        this.back = hardwareMap.get(DcMotorEx.class, "back");
-        this.left = hardwareMap.get(DcMotorEx.class, "left");
-        this.right = hardwareMap.get(DcMotorEx.class, "right");
+        this.front = hardwareMap.get(DcMotor.class, "front");
+        this.back = hardwareMap.get(DcMotor.class, "back");
+        this.left = hardwareMap.get(DcMotor.class, "left");
+        this.right = hardwareMap.get(DcMotor.class, "right");
 
         //change motor directions so that positive powers move the right way
         this.front.setDirection(DcMotor.Direction.REVERSE);
@@ -63,7 +62,7 @@ public class XDrivetrain extends LinearOpMode {
 
     public void initIMU(HardwareMap hardwareMap){ //we do this one separately so we don't waste time initializing the IMU when we don't need it
         //DEFINE REV HUB IMU
-        this.imu = hardwareMap.get(BNO055IMU.class, "hub1imu");
+        this.imu = hardwareMap.get(BNO055IMU.class, "imu");
 
         //SET IMU PARAMETERS
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -236,13 +235,13 @@ public class XDrivetrain extends LinearOpMode {
         left.setTargetPosition(left.getCurrentPosition() + forwardTicks);
         right.setTargetPosition(right.getCurrentPosition() + forwardTicks);
 
-        double forwardVelocityTICKS = 0; //radians per second
-        double strafeVelocityTICKS = 0; //radians per second
-        double previousForwardVelocityTICKS = 0;
-        double previousStrafeVelocityTICKS = 0;
+        double forwardPower = 0;
+        double strafePower = 0;
+        double previousForwardPower = 0;
+        double previousStrafePower = 0;
 
-        double forwardError; //inches
-        double strafeError;
+        double forwardPosition; //inches
+        double strafePosition;
 
         double time;
         double previousTime = 0;
@@ -250,68 +249,81 @@ public class XDrivetrain extends LinearOpMode {
         boolean forwardTargetReached = false;
         boolean strafeTargetReached = false;
 
-        while(opModeIsActive() && (!forwardTargetReached || !strafeTargetReached)){
+        //TODO check why this loop doesn't actually run
+        while(opModeIsActive() && (!forwardTargetReached || !strafeTargetReached) && timer.seconds() < maxTimeS){
 
-            time = timer.seconds();
+            time = timer.seconds(); //TODO: test precision of .seconds() vs .milliseconds() vs system time
 
-            forwardError = (left.getTargetPosition() - left.getCurrentPosition()) / COUNTS_PER_INCH;
-            strafeError = (front.getTargetPosition() - front.getCurrentPosition()) / COUNTS_PER_INCH;
+            forwardPosition = left.getCurrentPosition() / COUNTS_PER_INCH;
+            strafePosition = front.getCurrentPosition() / COUNTS_PER_INCH;
 
-            forwardVelocityTICKS = forwardController.getOutput(forwardError) * COUNTS_PER_INCH;
-            strafeVelocityTICKS = strafeController.getOutput(strafeError) * COUNTS_PER_INCH;
+            forwardPower = forwardController.getOutput(forwardPosition, forwardInches);
+            strafePower = strafeController.getOutput(strafePosition, strafeInches);
 
 
             //keep change in velocity to within a sane range AKA acceleration limiting
-            //counts per inch included because max accel constant is in linear units
+            //this is done with the assumption that robot velocity relates linearly with applied power
+            //this should be an accurate assumption if the RUN_USING_ENCODER mode is used
 
-            if(Math.abs(forwardVelocityTICKS - previousForwardVelocityTICKS) / ((time-previousTime)* COUNTS_PER_INCH) > MAX_ACCELERATION){
-                if(forwardVelocityTICKS > previousForwardVelocityTICKS){
+            if(Math.abs(forwardPower - previousForwardPower) / (time-previousTime) > MAX_ACCELERATION){
+                //checks acceleration suggested by PDController (dV/dt) against some set max
+                if(forwardPower > previousForwardPower){
 
                     //if PD controller says to increase velocity, add to previous velocity
-                    forwardVelocityTICKS = previousForwardVelocityTICKS + (MAX_ACCELERATION * (time-previousTime)) * COUNTS_PER_INCH;
+                    forwardPower = previousForwardPower + (MAX_ACCELERATION * (time-previousTime)); // kinematic equation v=vInitial + at
 
-                } else if(forwardVelocityTICKS < previousForwardVelocityTICKS){
+                } else if(forwardPower < previousForwardPower){
 
                     //if PD controller says to decrease velocity, subtract from previous velocity
-                    forwardVelocityTICKS = previousForwardVelocityTICKS - (MAX_ACCELERATION * (time-previousTime)) * COUNTS_PER_INCH;
+                    forwardPower = previousForwardPower - (MAX_ACCELERATION * (time-previousTime));
 
                 }
             }
 
-            if(Math.abs(strafeVelocityTICKS - previousStrafeVelocityTICKS) / ((time-previousTime)* COUNTS_PER_INCH) > MAX_ACCELERATION){
-                if(strafeVelocityTICKS > previousStrafeVelocityTICKS){
+            if(Math.abs(strafePower - previousStrafePower) / (time-previousTime) > MAX_ACCELERATION){
+                if(strafePower > previousStrafePower){
 
                     //if PD controller says to increase velocity, add to previous velocity
-                    strafeVelocityTICKS = previousStrafeVelocityTICKS + (MAX_ACCELERATION * (time-previousTime)) * COUNTS_PER_INCH;
+                    strafePower = previousStrafePower + (MAX_ACCELERATION * (time-previousTime));
 
-                } else if(strafeVelocityTICKS < previousStrafeVelocityTICKS){
+                } else if(strafePower < previousStrafePower){
 
                     //if PD controller says to decrease velocity, subtract from previous velocity
-                    strafeVelocityTICKS = previousStrafeVelocityTICKS - (MAX_ACCELERATION * (time-previousTime)) * COUNTS_PER_INCH;
+                    strafePower = previousStrafePower - (MAX_ACCELERATION * (time-previousTime));
 
                 }
             }
 
             //assign velocities to motors
-            front.setVelocity(strafeVelocityTICKS);
-            back.setVelocity(strafeVelocityTICKS);
-            left.setVelocity(forwardVelocityTICKS);
-            right.setVelocity(forwardVelocityTICKS);
+            front.setPower(strafePower);
+            back.setPower(strafePower);
+            left.setPower(forwardPower);
+            right.setPower(forwardPower);
 
             //check if targets are reached
-            if(forwardError < DRIVE_ERROR_THRESHOLD){
+            if(Math.abs(forwardPosition) < DRIVE_ERROR_THRESHOLD){
                 forwardTargetReached = true;
             }
-            if(strafeError < DRIVE_ERROR_THRESHOLD){
+            if(Math.abs(strafePosition) < DRIVE_ERROR_THRESHOLD){
                 strafeTargetReached = true;
             }
 
+            telemetry.addData("Forward Error: ", forwardPosition);
+            telemetry.addData("Strafe Error: ", strafePosition);
+            telemetry.update();
+
             //set variables for next loop
             previousTime = time;
-            previousForwardVelocityTICKS = forwardVelocityTICKS;
-            previousStrafeVelocityTICKS = strafeVelocityTICKS;
+            previousForwardPower = forwardPower;
+            previousStrafePower = strafePower;
 
         }
+
+        //shuts motors off after movement is done
+        front.setPower(0);
+        back.setPower(0);
+        left.setPower(0);
+        right.setPower(0);
 
 
     }

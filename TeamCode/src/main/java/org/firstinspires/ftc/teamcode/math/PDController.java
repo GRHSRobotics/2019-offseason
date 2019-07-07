@@ -18,7 +18,15 @@ public class PDController {
         this.previousTime = timer.seconds();
     }
 
-    public double getOutput(double error){
+    /**
+     *
+     * @param input The actual state of the system being controlled, usually recorded by sensors
+     * @param setPoint The desired state of the system
+     * @return The motor power that will minimize the time it takes to reach the setpoint given that this method is called repeatedly and the P and D coefficients have been tuned.
+     */
+    public double getOutput(double input, double setPoint){
+
+        double error = setPoint - input; //positive error means that the setpoint has not yet been reached, and will output a positive power
 
         //first we get the proportional term of the output power
         double proportionalCorrection = kP * error;
