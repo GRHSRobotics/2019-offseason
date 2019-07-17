@@ -7,9 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.teamcode.math.PDController;
+import org.firstinspires.ftc.teamcode.math.PIDController;
 
 //TODO make a way to have IMU initialization without extending LinearOpMode
 //this is a messy and temporary solution
@@ -33,8 +31,10 @@ public class XDrivetrain extends LinearOpMode {
     public static final double COUNTS_PER_INCH = COUNTS_PER_ROTATION / WHEEL_CIRCUMFERENCE;
 
     public static final double kP_DRIVE = 0.05;
+    public static final double kI_DRIVE = 0;
     public static final double kD_DRIVE = 0; //until constants are properly determined
     public static final double kP_TURN = 0.01;
+    public static final double kI_TURN = 0;
     public static final double kD_TURN = 0.1;
 
     public static final double DRIVE_ERROR_THRESHOLD = 0.3; //max acceptable error in position after a movement, in inches
@@ -224,8 +224,8 @@ public class XDrivetrain extends LinearOpMode {
 
         ElapsedTime timer = new ElapsedTime();
 
-        PDController forwardController = new PDController(kP_DRIVE, kD_DRIVE, timer); //constants are the same because x drive is same in both directions
-        PDController strafeController = new PDController(kP_DRIVE, kD_DRIVE, timer);
+        PIDController forwardController = new PIDController(kP_DRIVE, kI_DRIVE, kD_DRIVE, timer, telemetry); //constants are the same because x drive is same in both directions
+        PIDController strafeController = new PIDController(kP_DRIVE, kI_DRIVE, kD_DRIVE, timer, telemetry);
 
         int forwardTicks = (int)(forwardInches * COUNTS_PER_INCH);
         int strafeTicks = (int)(strafeInches * COUNTS_PER_INCH);
@@ -266,7 +266,7 @@ public class XDrivetrain extends LinearOpMode {
             //this should be an accurate assumption if the RUN_USING_ENCODER mode is used
 
             if(Math.abs(forwardPower - previousForwardPower) / (time-previousTime) > MAX_ACCELERATION){
-                //checks acceleration suggested by PDController (dV/dt) against some set max
+                //checks acceleration suggested by PIDController (dV/dt) against some set max
                 if(forwardPower > previousForwardPower){
 
                     //if PD controller says to increase velocity, add to previous velocity
