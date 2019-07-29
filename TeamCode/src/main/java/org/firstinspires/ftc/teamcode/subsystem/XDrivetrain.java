@@ -30,14 +30,14 @@ public class XDrivetrain extends LinearOpMode {
     public static final double COUNTS_PER_ROTATION = 1120;
     public static final double COUNTS_PER_INCH = COUNTS_PER_ROTATION / WHEEL_CIRCUMFERENCE;
 
-    public static final double kP_DRIVE = 0.05;
+    public static final double kP_DRIVE = 0.8;
     public static final double kI_DRIVE = 0;
-    public static final double kD_DRIVE = 0; //until constants are properly determined
+    public static final double kD_DRIVE = 10; //until constants are properly determined
     public static final double kP_TURN = 0.01;
     public static final double kI_TURN = 0;
     public static final double kD_TURN = 0.1;
 
-    public static final double DRIVE_ERROR_THRESHOLD = 0.3; //max acceptable error in position after a movement, in inches
+    public static final double DRIVE_ERROR_THRESHOLD = 0.5; //max acceptable error in position after a movement, in inches
 
 
     public XDrivetrain(HardwareMap hardwareMap){
@@ -250,49 +250,76 @@ public class XDrivetrain extends LinearOpMode {
         boolean strafeTargetReached = false;
 
         //TODO check why this loop doesn't actually run
-        while(opModeIsActive() && (!forwardTargetReached || !strafeTargetReached) && timer.seconds() < maxTimeS){
+        while(opModeIsActive() && !(forwardTargetReached && strafeTargetReached) && timer.seconds() < maxTimeS){
 
-            time = timer.seconds(); //TODO: test precision of .seconds() vs .milliseconds() vs system time
 
-            forwardPosition = left.getCurrentPosition() / COUNTS_PER_INCH;
+            forwardPosition = right.getCurrentPosition() / COUNTS_PER_INCH;
             strafePosition = front.getCurrentPosition() / COUNTS_PER_INCH;
 
-            forwardPower = forwardController.getOutput(forwardPosition, forwardInches);
-            strafePower = strafeController.getOutput(strafePosition, strafeInches);
+            //check if targets are reached
+            if(Math.abs(forwardInches - forwardPosition) < DRIVE_ERROR_THRESHOLD){
+                forwardTargetReached = true;
+            }
+            if(Math.abs(strafeInches - strafePosition) < DRIVE_ERROR_THRESHOLD){
+                strafeTargetReached = true;
+            }
+
+            //get motor power from PID controller and clamp it to range [-1, 1]
+            if(forwardInches > 0){
+                forwardPower = Math.min(forwardController.getOutput(forwardPosition, forwardInches), 1);
+            } else {
+                forwardPower = Math.max(forwardController.getOutput(forwardPosition, forwardInches), -1);
+            }
+
+            if(strafeInches > 0){
+                strafePower = Math.min(strafeController.getOutput(strafePosition, strafeInches), 1);
+            } else {
+                strafePower = Math.max(strafeController.getOutput(strafePosition, strafeInches), -1);
+            }
+
+            //cut power if target is reached
+            if(forwardTargetReached){
+                forwardPower = 0;
+            }
+            if(strafeTargetReached){
+                strafePower = 0;
+            }
 
 
+/*
             //keep change in velocity to within a sane range AKA acceleration limiting
             //this is done with the assumption that robot velocity relates linearly with applied power
             //this should be an accurate assumption if the RUN_USING_ENCODER mode is used
 
-            if(Math.abs(forwardPower - previousForwardPower) / (time-previousTime) > MAX_ACCELERATION){
+            if(Math.abs(forwardPower - previousForwardPower) / (timer.seconds() - previousTime) > MAX_ACCELERATION){
                 //checks acceleration suggested by PIDController (dV/dt) against some set max
                 if(forwardPower > previousForwardPower){
 
                     //if PD controller says to increase velocity, add to previous velocity
-                    forwardPower = previousForwardPower + (MAX_ACCELERATION * (time-previousTime)); // kinematic equation v=vInitial + at
+                    forwardPower = previousForwardPower + (MAX_ACCELERATION * (timer.seconds() - previousTime)); // kinematic equation v=vInitial + at
 
                 } else if(forwardPower < previousForwardPower){
 
                     //if PD controller says to decrease velocity, subtract from previous velocity
-                    forwardPower = previousForwardPower - (MAX_ACCELERATION * (time-previousTime));
+                    forwardPower = previousForwardPower - (MAX_ACCELERATION * (timer.seconds() - previousTime));
 
                 }
             }
 
-            if(Math.abs(strafePower - previousStrafePower) / (time-previousTime) > MAX_ACCELERATION){
+            if(Math.abs(strafePower - previousStrafePower) / (timer.seconds() - previousTime) > MAX_ACCELERATION){
                 if(strafePower > previousStrafePower){
 
                     //if PD controller says to increase velocity, add to previous velocity
-                    strafePower = previousStrafePower + (MAX_ACCELERATION * (time-previousTime));
+                    strafePower = previousStrafePower + (MAX_ACCELERATION * (timer.seconds() - previousTime));
 
                 } else if(strafePower < previousStrafePower){
 
                     //if PD controller says to decrease velocity, subtract from previous velocity
-                    strafePower = previousStrafePower - (MAX_ACCELERATION * (time-previousTime));
+                    strafePower = previousStrafePower - (MAX_ACCELERATION * (timer.seconds() - previousTime));
 
                 }
             }
+            */
 
             //assign velocities to motors
             front.setPower(strafePower);
@@ -300,20 +327,13 @@ public class XDrivetrain extends LinearOpMode {
             left.setPower(forwardPower);
             right.setPower(forwardPower);
 
-            //check if targets are reached
-            if(Math.abs(forwardPosition) < DRIVE_ERROR_THRESHOLD){
-                forwardTargetReached = true;
-            }
-            if(Math.abs(strafePosition) < DRIVE_ERROR_THRESHOLD){
-                strafeTargetReached = true;
-            }
 
-            telemetry.addData("Forward Error: ", forwardPosition);
-            telemetry.addData("Strafe Error: ", strafePosition);
+            telemetry.addData("Forward Position: ", forwardPosition);
+            telemetry.addData("Strafe Position: ", strafePosition);
             telemetry.update();
 
             //set variables for next loop
-            previousTime = time;
+            previousTime = timer.seconds();
             previousForwardPower = forwardPower;
             previousStrafePower = strafePower;
 
