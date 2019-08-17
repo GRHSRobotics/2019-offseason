@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.math.PIDController;
 //TODO make a way to have IMU initialization without extending LinearOpMode
 //this is a messy and temporary solution
 //extending an OpMode class in a hardware class is no bueno
-public class XDrivetrain extends LinearOpMode {
+public class XDrivetrain {
 
     public DcMotor front;
     public DcMotor back;
@@ -60,6 +60,8 @@ public class XDrivetrain extends LinearOpMode {
 
     }
 
+
+/*
     public void initIMU(HardwareMap hardwareMap){ //we do this one separately so we don't waste time initializing the IMU when we don't need it
         //DEFINE REV HUB IMU
         this.imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -87,6 +89,7 @@ public class XDrivetrain extends LinearOpMode {
         telemetry.addData("imu calib status", imu.getCalibrationStatus().toString());
 
     }
+    */
 
     public void setRunMode(DcMotor.RunMode runMode){
         front.setMode(runMode);
@@ -216,6 +219,7 @@ public class XDrivetrain extends LinearOpMode {
      * @param speedFraction a multiplier between 0 and 1 for what fraction of the robot's max speed can be used
      * @param maxTimeS the maximum time before the method terminates, in seconds
      */
+    /*
     public void encoderDrive(double forwardInches, double strafeInches, double speedFraction, double maxTimeS){
 
         //ensures that motor mode is set the way we want it
@@ -230,31 +234,29 @@ public class XDrivetrain extends LinearOpMode {
         int forwardTicks = (int)(forwardInches * COUNTS_PER_INCH);
         int strafeTicks = (int)(strafeInches * COUNTS_PER_INCH);
 
-        front.setTargetPosition(front.getCurrentPosition() + strafeTicks);
-        back.setTargetPosition(back.getCurrentPosition() + strafeTicks);
-        left.setTargetPosition(left.getCurrentPosition() + forwardTicks);
-        right.setTargetPosition(right.getCurrentPosition() + forwardTicks);
-
         double forwardPower = 0;
         double strafePower = 0;
         double previousForwardPower = 0;
         double previousStrafePower = 0;
 
         double forwardPosition; //inches
+        double initialForwardPosition = right.getCurrentPosition() / COUNTS_PER_INCH;
         double strafePosition;
+        double initialStrafePosition = front.getCurrentPosition() / COUNTS_PER_INCH;
 
         double time;
         double previousTime = 0;
 
         boolean forwardTargetReached = false;
         boolean strafeTargetReached = false;
+        boolean isComplete = false;
 
-        //TODO check why this loop doesn't actually run
-        while(opModeIsActive() && !(forwardTargetReached && strafeTargetReached) && timer.seconds() < maxTimeS){
+        //doesn't run because this has no connection to the actual opMode class and has no way of knowing that it is active
+        while(opModeIsActive()){
 
 
-            forwardPosition = right.getCurrentPosition() / COUNTS_PER_INCH;
-            strafePosition = front.getCurrentPosition() / COUNTS_PER_INCH;
+            forwardPosition = (right.getCurrentPosition() / COUNTS_PER_INCH) - initialForwardPosition;
+            strafePosition = (front.getCurrentPosition() / COUNTS_PER_INCH) - initialStrafePosition;
 
             //check if targets are reached
             if(Math.abs(forwardInches - forwardPosition) < DRIVE_ERROR_THRESHOLD){
@@ -277,12 +279,9 @@ public class XDrivetrain extends LinearOpMode {
                 strafePower = Math.max(strafeController.getOutput(strafePosition, strafeInches), -1);
             }
 
-            //cut power if target is reached
-            if(forwardTargetReached){
-                forwardPower = 0;
-            }
-            if(strafeTargetReached){
-                strafePower = 0;
+            //end loop if target is reached
+            if(forwardTargetReached && strafeTargetReached){
+                isComplete = true;
             }
 
 
@@ -319,7 +318,7 @@ public class XDrivetrain extends LinearOpMode {
 
                 }
             }
-            */
+
 
             //assign velocities to motors
             front.setPower(strafePower);
@@ -347,10 +346,11 @@ public class XDrivetrain extends LinearOpMode {
 
 
     }
+    */
 
 
     //this is here because it needs to be
     //temporary solution until we can find a way to not extend LinearOpMode
-    @Override
-    public void runOpMode(){}
+    //@Override
+    //public void runOpMode(){}
 }

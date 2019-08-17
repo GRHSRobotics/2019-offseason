@@ -23,6 +23,12 @@ public class BasicTeleopTest extends LinearOpMode {
 
             robot.drivetrain.setPowerRectangular(-gamepad1.left_stick_y, gamepad1.left_stick_x);
 
+            telemetry.addData("Right", robot.drivetrain.right.getCurrentPosition());
+            telemetry.addData("Left:", robot.drivetrain.left.getCurrentPosition());
+            telemetry.addData("Front:", robot.drivetrain.front.getCurrentPosition());
+            telemetry.addData("Back:", robot.drivetrain.back.getCurrentPosition());
+            telemetry.update();
+
 
 
         }
