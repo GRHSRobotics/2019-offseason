@@ -65,9 +65,9 @@ public class PIDController {
         lastInput = input;
 
         //to see what's going on
-        telemetry.addData("Proportional Term:", proportionalCorrection);
-        telemetry.addData("integral Term:", integralCorrection);
-        telemetry.addData("Derivative Term:", derivativeCorrection);
+        //telemetry.addData("Proportional Term:", proportionalCorrection);
+        //telemetry.addData("integral Term:", integralCorrection);
+        //telemetry.addData("Derivative Term:", derivativeCorrection);
 
         //put it all together
         //derivative term is subtracted since we want the output to go down if its changing too fast

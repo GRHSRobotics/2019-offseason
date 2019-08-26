@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class MecanumDrivetrain {
@@ -13,7 +14,13 @@ public class MecanumDrivetrain {
     public DcMotorEx backLeft;
     public DcMotorEx backRight;
 
-    public MecanumDrivetrain(HardwareMap hardwareMap){
+    //CONSTANTS
+    public static final double COUNTS_PER_REVOLUTION = 560; //assuming HD Hex 20:1
+    public static final double WHEEL_RADIUS = 2; //inches
+    public static final double COUNTS_PER_INCH = COUNTS_PER_REVOLUTION / (2 * Math.PI * WHEEL_RADIUS); //counts per rev divided by inches per rev
+
+
+    public MecanumDrivetrain(HardwareMap hardwareMap, Telemetry telemetry){
         this.frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
         this.frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         this.backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
@@ -29,6 +36,9 @@ public class MecanumDrivetrain {
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         setRunMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         setRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        telemetry.addData("Drivetrain: ", "Initialized");
+        telemetry.update();
 
     }
 
