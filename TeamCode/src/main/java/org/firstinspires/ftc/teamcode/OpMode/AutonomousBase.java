@@ -161,14 +161,15 @@ public class AutonomousBase extends LinearOpMode {
             //simple P controller to correct if the robot isn't holding angle properly on its own
             //the plain decimal is the P constant. A value of 0.1 would give a power of 1 when robot is 10 degrees off heading
             //too low of a value and it won't correct enough, too high and the robot starts to oscillate
-            double rotationSpeed = 0.08 * (robot.gyroscope.getAngle(AngleUnit.DEGREES) - initialHeading);
+            //value is negative because a positive delta in heading requires negative rotation to counteract
+            double rotationPower = -0.08 * (robot.gyroscope.getAngle(AngleUnit.DEGREES) - initialHeading);
 
-            robot.drivetrain.setPower(translationPower, robotCentricAngle, 0, AngleUnit.RADIANS);
+            robot.drivetrain.setPower(translationPower, robotCentricAngle, rotationPower, AngleUnit.RADIANS);
 
         }
 
         //stop after movement is complete
-        robot.drivetrain.setPower(0, theta, 0, AngleUnit.RADIANS);
+        robot.drivetrain.setPower(0, 0, 0, AngleUnit.RADIANS);
     }
 
 

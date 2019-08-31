@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpMode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -28,7 +29,7 @@ public class PIDCoefficientsTest extends LinearOpMode {
         controller.setMaxI(0.3);
 
         waitForStart();
-
+/*
         while(opModeIsActive()){
             currentPosition = robot.drivetrain.right.getCurrentPosition() / robot.drivetrain.COUNTS_PER_INCH; //converts ticks to inches
 
@@ -45,7 +46,7 @@ public class PIDCoefficientsTest extends LinearOpMode {
             telemetry.update();
 
         }
-
+*/
 
     }
 }

@@ -13,6 +13,7 @@ public class Gyroscope extends LinearOpMode {
 
     public BNO055IMU imu;
 
+    //TODO make gyroscope pull from a config/calibration file to make init faster
     public Gyroscope(HardwareMap hardwareMap, Telemetry telemetry){
         //DEFINE REV HUB IMU
         imu = hardwareMap.get(BNO055IMU.class, "imu");

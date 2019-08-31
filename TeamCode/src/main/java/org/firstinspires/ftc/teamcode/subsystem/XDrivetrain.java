@@ -61,36 +61,6 @@ public class XDrivetrain {
     }
 
 
-/*
-    public void initIMU(HardwareMap hardwareMap){ //we do this one separately so we don't waste time initializing the IMU when we don't need it
-        //DEFINE REV HUB IMU
-        this.imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        //SET IMU PARAMETERS
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled = false;
-
-        //INIT IMU
-        this.imu.initialize(parameters);
-
-        telemetry.addData("Mode", "Calibrating Gyro");
-
-        // make sure the imu gyro is calibrated before continuing.
-        while (!isStopRequested() && !this.imu.isGyroCalibrated()) {
-            sleep(50);
-            idle();
-        }
-
-        //gyroHeading = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES).firstAngle;
-        //only keeping this here as a reference on how to get gyro heading
-
-        telemetry.addData("imu calib status", imu.getCalibrationStatus().toString());
-
-    }
-    */
-
     public void setRunMode(DcMotor.RunMode runMode){
         front.setMode(runMode);
         back.setMode(runMode);
@@ -140,13 +110,7 @@ public class XDrivetrain {
 
 
     }
-    /*
-    public void setPowerEx(double forwardPower, double strafePower){
 
-        front.setVelocity(strafePower, );
-
-    }
-    */
 
     /**
      *
@@ -210,147 +174,5 @@ public class XDrivetrain {
 
     }
 
-    /**
-     * Drive forward and sideways a certain number of inches.
-     * This method is velocity and acceleration limited and utilizes a PD loop to determine target velocity
-     *
-     * @param forwardInches the forward distance to be travelled by the robot
-     * @param strafeInches the side to side distance to be travelled by the robot, where to the right is positive
-     * @param speedFraction a multiplier between 0 and 1 for what fraction of the robot's max speed can be used
-     * @param maxTimeS the maximum time before the method terminates, in seconds
-     */
-    /*
-    public void encoderDrive(double forwardInches, double strafeInches, double speedFraction, double maxTimeS){
 
-        //ensures that motor mode is set the way we want it
-        setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        setRunMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        ElapsedTime timer = new ElapsedTime();
-
-        PIDController forwardController = new PIDController(kP_DRIVE, kI_DRIVE, kD_DRIVE, timer, telemetry); //constants are the same because x drive is same in both directions
-        PIDController strafeController = new PIDController(kP_DRIVE, kI_DRIVE, kD_DRIVE, timer, telemetry);
-
-        int forwardTicks = (int)(forwardInches * COUNTS_PER_INCH);
-        int strafeTicks = (int)(strafeInches * COUNTS_PER_INCH);
-
-        double forwardPower = 0;
-        double strafePower = 0;
-        double previousForwardPower = 0;
-        double previousStrafePower = 0;
-
-        double forwardPosition; //inches
-        double initialForwardPosition = right.getCurrentPosition() / COUNTS_PER_INCH;
-        double strafePosition;
-        double initialStrafePosition = front.getCurrentPosition() / COUNTS_PER_INCH;
-
-        double time;
-        double previousTime = 0;
-
-        boolean forwardTargetReached = false;
-        boolean strafeTargetReached = false;
-        boolean isComplete = false;
-
-        //doesn't run because this has no connection to the actual opMode class and has no way of knowing that it is active
-        while(opModeIsActive()){
-
-
-            forwardPosition = (right.getCurrentPosition() / COUNTS_PER_INCH) - initialForwardPosition;
-            strafePosition = (front.getCurrentPosition() / COUNTS_PER_INCH) - initialStrafePosition;
-
-            //check if targets are reached
-            if(Math.abs(forwardInches - forwardPosition) < DRIVE_ERROR_THRESHOLD){
-                forwardTargetReached = true;
-            }
-            if(Math.abs(strafeInches - strafePosition) < DRIVE_ERROR_THRESHOLD){
-                strafeTargetReached = true;
-            }
-
-            //get motor power from PID controller and clamp it to range [-1, 1]
-            if(forwardInches > 0){
-                forwardPower = Math.min(forwardController.getOutput(forwardPosition, forwardInches), 1);
-            } else {
-                forwardPower = Math.max(forwardController.getOutput(forwardPosition, forwardInches), -1);
-            }
-
-            if(strafeInches > 0){
-                strafePower = Math.min(strafeController.getOutput(strafePosition, strafeInches), 1);
-            } else {
-                strafePower = Math.max(strafeController.getOutput(strafePosition, strafeInches), -1);
-            }
-
-            //end loop if target is reached
-            if(forwardTargetReached && strafeTargetReached){
-                isComplete = true;
-            }
-
-
-/*
-            //keep change in velocity to within a sane range AKA acceleration limiting
-            //this is done with the assumption that robot velocity relates linearly with applied power
-            //this should be an accurate assumption if the RUN_USING_ENCODER mode is used
-
-            if(Math.abs(forwardPower - previousForwardPower) / (timer.seconds() - previousTime) > MAX_ACCELERATION){
-                //checks acceleration suggested by PIDController (dV/dt) against some set max
-                if(forwardPower > previousForwardPower){
-
-                    //if PD controller says to increase velocity, add to previous velocity
-                    forwardPower = previousForwardPower + (MAX_ACCELERATION * (timer.seconds() - previousTime)); // kinematic equation v=vInitial + at
-
-                } else if(forwardPower < previousForwardPower){
-
-                    //if PD controller says to decrease velocity, subtract from previous velocity
-                    forwardPower = previousForwardPower - (MAX_ACCELERATION * (timer.seconds() - previousTime));
-
-                }
-            }
-
-            if(Math.abs(strafePower - previousStrafePower) / (timer.seconds() - previousTime) > MAX_ACCELERATION){
-                if(strafePower > previousStrafePower){
-
-                    //if PD controller says to increase velocity, add to previous velocity
-                    strafePower = previousStrafePower + (MAX_ACCELERATION * (timer.seconds() - previousTime));
-
-                } else if(strafePower < previousStrafePower){
-
-                    //if PD controller says to decrease velocity, subtract from previous velocity
-                    strafePower = previousStrafePower - (MAX_ACCELERATION * (timer.seconds() - previousTime));
-
-                }
-            }
-
-
-            //assign velocities to motors
-            front.setPower(strafePower);
-            back.setPower(strafePower);
-            left.setPower(forwardPower);
-            right.setPower(forwardPower);
-
-
-            telemetry.addData("Forward Position: ", forwardPosition);
-            telemetry.addData("Strafe Position: ", strafePosition);
-            telemetry.update();
-
-            //set variables for next loop
-            previousTime = timer.seconds();
-            previousForwardPower = forwardPower;
-            previousStrafePower = strafePower;
-
-        }
-
-        //shuts motors off after movement is done
-        front.setPower(0);
-        back.setPower(0);
-        left.setPower(0);
-        right.setPower(0);
-
-
-    }
-    */
-
-
-    //this is here because it needs to be
-    //temporary solution until we can find a way to not extend LinearOpMode
-    //@Override
-    //public void runOpMode(){}
 }
